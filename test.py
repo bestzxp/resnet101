@@ -41,7 +41,7 @@ file.write('id,predicted\n')
 for i in range(12800):
     if i%1000==0:
         print(i)
-    imgs = loader.get_test_image('/home/sun/Disk/funi/data/test/{}.jpg'.format(i + 1))
+    imgs = loader.get_test_image('/home/sun/zxp/vgg_net/data/test/{}.jpg'.format(i + 1))
     if imgs is not None:
         img_num = imgs.shape[0]
         feed_dicts = {net.inputs: imgs, net.ground_truth: np.zeros((1, 128))}

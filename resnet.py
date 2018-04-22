@@ -26,6 +26,7 @@ class ResNet(object):
                                             filters=output_channel,
                                             kernel_size=[1, 1],
                                             strides=[stride, stride],
+                                            padding='SAME',
                                             name='shortcut')
             # tf.layers.batch_normalization()
             residual = tf.layers.conv2d(pre_act,
@@ -33,6 +34,7 @@ class ResNet(object):
                                         kernel_size=[1, 1],
                                         strides=[1, 1],
                                         use_bias=False,
+                                        padding='SAME',
                                         name='conv1')
             residual = tf.layers.batch_normalization(residual, momentum=0.9, name='conv1')
             if stride == 1:
@@ -68,8 +70,8 @@ class ResNet(object):
             output = shortcut + residual
         return output
 
-    def build_model(self, inputs):
-        self.conv1 = tf.layers.conv2d(inputs, filters=64, kernel_size=[7, 7], strides=[2, 2], padding='SAME', name='conv1')
+    def build(self):
+        self.conv1 = tf.layers.conv2d(self.inputs, filters=64, kernel_size=[7, 7], strides=[2, 2], padding='SAME', name='conv1')
         self.pool1 = tf.layers.max_pooling2d(self.conv1, pool_size=[3, 3], strides=[2, 2], padding='SAME', name='pool1')
         net = self.pool1
         with tf.variable_scope('residual_1'):
@@ -92,16 +94,12 @@ class ResNet(object):
         net = tf.layers.batch_normalization(net)
         net = tf.nn.relu(net)
         net = tf.reduce_mean(net, [1, 2], name='pool_5', keep_dims=True)
-        net = tf.layers.conv2d(net, self.class_num, kernel_size=[1, 1], name='logits')
-        net = tf.squeeze(net, axis=[1, 2])
-        return net
+        net = tf.layers.conv2d(net, self.class_num, padding='SAME',kernel_size=[1, 1], name='logits')
+        self.result = tf.squeeze(net, axis=[1, 2])
+        return self.result
 
-batch_size = 32
-height, width = 224, 224
-inputs = tf.random_uniform((batch_size, height, width, 3))
-
-resnet = ResNet()
-resnet.build_model(inputs)
-vars = tf.global_variables()
+    def loss(self):
+        print(self.ground_truth)
+        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.result, labels=self.ground_truth), name='loss')
 
 

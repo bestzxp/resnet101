@@ -6,14 +6,13 @@ import numpy as np
 # 0.01 in ckpt_1
 
 
-flag = False
 learning_rate=0.001
 
-net = VGGNet([224, 224], 128)
+net = ResNet([224, 224], 128)
 net.build()
-loss = net.loss(flag)
+loss = net.loss()
 # print(tf.global_variables())
-ckpt_path = '../ckpt/model_0.ckpt'
+ckpt_path = None # '../ckpt/model_0.ckpt'
 
 loader = DataLoader()
 
@@ -23,10 +22,10 @@ saver = tf.train.Saver(tf.global_variables(), max_to_keep=None)
 
 ls = tf.summary.scalar('loss', loss)
 
-train_writer = tf.summary.FileWriter('../log_train', sess.graph)
-valid_writer = tf.summary.FileWriter('../log_valid', sess.graph)
+train_writer = tf.summary.FileWriter('./log_train', sess.graph)
+valid_writer = tf.summary.FileWriter('./log_valid', sess.graph)
 
-batch = 32
+batch = 16
 batch_num = loader.images_urls.shape[0] // batch
 # config = tf.ConfigProto()
 # config.gpu_options.per_process_gpu_memory_fraction = 0.7
@@ -50,16 +49,16 @@ for i in range(100000):
         res = loader.get_batch_data(batch)
         feed_dicts = {net.inputs: res[0], net.ground_truth: res[1]}
         # sess.run(optimizer, feed_dict=feed_dicts)
-        _, ls_, l, fc_16 = sess.run([optimizer, ls, loss, net.fc_16], feed_dict=feed_dicts)
+        _, ls_, l, fc_16 = sess.run([optimizer, ls, loss, net.result], feed_dict=feed_dicts)
         total_loss+=l
         for j in range(batch):
             if np.argmax(fc_16[j, :]) == np.argmax([res[1][j, :]]):
                 cou += 1
                 true_num += 1
         train_writer.add_summary(ls_, global_step)
-        sys.stdout.write("\r-train epoch:%3d, idx:%4d, loss: %0.6f true_num: %2d / %2d" % (i, idx, l, true_num, batch))
+        sys.stdout.write("\r-train epoch:%3d, idx:%4d, loss: %10.6f true_num: %2d / %2d" % (i, idx, l, true_num, batch))
     print("\nepoch:{}, train avg_loss:{}".format(i, total_loss/batch_num))
-    saver.save(sess, '../ckpt/model_{}.ckpt'.format(i))
+    saver.save(sess, './ckpt/model_{}.ckpt'.format(i))
 
     loader.shuffle()
 
@@ -72,7 +71,7 @@ for i in range(100000):
         res = loader.get_valid_batch_data(batch)
         feed_dicts = {net.inputs: res[0], net.ground_truth: res[1]}
         # sess.run(optimizer, feed_dict=feed_dicts)
-        ls_, l, fc_16 = sess.run([ls, loss, net.fc_16], feed_dict=feed_dicts)
+        ls_, l, fc_16 = sess.run([ls, loss, net.result], feed_dict=feed_dicts)
         # fc_16 = sess.run([net.fc_16], feed_dict=feed_dicts)
         # fc_16 = np.array(fc_16[0])
         for j in range(batch):

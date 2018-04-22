@@ -19,20 +19,11 @@ class DataLoader(object):
         img_path_urls = []
         label = []
         for i in range(len(classes)):
-            images = os.listdir('/home/sun/Disk/train_funi/{}/{}/'.format(type, classes[i]))
-            # print(images)
-            images = ['/home/sun/Disk/train_funi/{}/{}/'.format(type, classes[i])
-                                  + image for image in images if 'blur4.0' not in image and 'noise0.05' not in image]
+            images = os.listdir('/home/sun/zxp/vgg_net/data/{}/{}/'.format(type, classes[i]))
+            images = ['/home/sun/zxp/vgg_net/data/{}/{}/'.format(type, classes[i])
+                                  + image for image in images]
             img_path_urls.extend(images)
             label.extend([i] * len(images))
-            if type=='train' and len(images) <700:
-                img_path_urls.extend(
-                    ['/home/sun/Disk/train_funi/{}/{}/'.format(type, classes[i]) + image for image in images])
-                label.extend([i] * len(images))
-            if type == 'train' and len(images) <400:
-                img_path_urls.extend(
-                    ['/home/sun/Disk/train_funi/{}/{}/'.format(type, classes[i]) + image for image in images])
-                label.extend([i] * len(images))
             print('{}: {} has {} images'.format(type, classes[i], len(images)), '===', i, classes[i])
             # print('class {} has {} images'.format(classes[i], len(images)))
         print('\ntotal images num: {}'.format(len(img_path_urls)))
@@ -71,7 +62,6 @@ class DataLoader(object):
         self.cursor = 0
 
     def get_image(self, image_url):
-        # print(image_url)
         img = cv2.imread(image_url)
         img = cv2.resize(img, (224, 224))
         return img
@@ -96,9 +86,7 @@ class DataLoader(object):
             return None
         if width<100 or height<100:
             return np.array(res)
-        # print(img.shape)
         im1 = img[width//8:, height//8:, :]
-        # print(im1.shape)
         res.append(cv2.resize(im1, (224, 224)) - self.avg)
 
         im1 = img[width // 4:, height // 4:, :]
